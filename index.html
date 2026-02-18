@@ -3,70 +3,502 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Financial Dashboard Buttons</title>
+    <title>OneStream Parcel Service Plan Mode</title>
     <style>
       :root {
         color-scheme: light;
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        --bg: #f4f7fb;
+        --card: #ffffff;
+        --border: #d8e0ef;
+        --text: #23324a;
+        --subtle: #5d6c85;
+        --primary: #1e50a2;
+        --primary-strong: #153d7d;
+        --pill: #e9f0ff;
+      }
+
+      * {
+        box-sizing: border-box;
       }
 
       body {
         margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: linear-gradient(160deg, #eef3ff 0%, #f7f9ff 100%);
+        background: linear-gradient(180deg, #edf3ff 0%, var(--bg) 100%);
+        color: var(--text);
       }
 
-      .button-panel {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 2rem;
-        box-shadow: 0 12px 30px rgba(32, 56, 85, 0.12);
+      .app-shell {
+        width: min(1100px, 94vw);
+        margin: 2rem auto 3rem;
         display: grid;
-        gap: 0.75rem;
-        width: min(90vw, 320px);
+        gap: 1.25rem;
+      }
+
+      .header,
+      .panel,
+      .package-card,
+      .distribution-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(35, 50, 74, 0.08);
+      }
+
+      .header {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
       }
 
       h1 {
-        margin: 0 0 0.5rem;
-        font-size: 1.2rem;
-        color: #253247;
+        margin: 0;
+        font-size: 1.4rem;
       }
 
-      button {
+      .subtitle {
+        margin: 0.35rem 0 0;
+        color: var(--subtle);
+        font-size: 0.94rem;
+      }
+
+      .mode-pill {
+        background: var(--pill);
+        color: var(--primary-strong);
+        border: 1px solid #c8dafd;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        font-size: 0.82rem;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .tab-button {
+        border: 1px solid #b8caeb;
+        background: #eaf1ff;
+        color: var(--primary-strong);
+        border-radius: 10px;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .tab-button[aria-selected="true"] {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+      }
+
+      .tab-panel[hidden] {
+        display: none;
+      }
+
+      .panel {
+        padding: 1rem 1.2rem;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .button {
         border: 0;
         border-radius: 10px;
-        padding: 0.85rem 1rem;
-        font-size: 1rem;
+        padding: 0.65rem 0.95rem;
+        font-size: 0.9rem;
         font-weight: 600;
-        color: #ffffff;
         cursor: pointer;
-        transition: transform 0.15s ease, filter 0.15s ease;
       }
 
-      button:hover {
-        transform: translateY(-1px);
-        filter: brightness(1.05);
+      .button.primary {
+        background: var(--primary);
+        color: #fff;
       }
 
-      button:active {
-        transform: translateY(0);
+      .button.primary:hover {
+        background: var(--primary-strong);
       }
 
-      .revenue { background: #166534; }
-      .expenses { background: #b91c1c; }
-      .assets { background: #1d4ed8; }
-      .liabilities { background: #7c3aed; }
+      .button.secondary {
+        background: #edf3ff;
+        color: var(--primary-strong);
+        border: 1px solid #bbcdf1;
+      }
+
+      .package-list,
+      .distribution-list {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .package-card,
+      .distribution-card {
+        padding: 1rem;
+        display: grid;
+        gap: 0.9rem;
+      }
+
+      .item-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .item-title {
+        font-weight: 700;
+      }
+
+      .section-title {
+        margin: 0;
+        font-size: 0.92rem;
+        color: var(--subtle);
+      }
+
+      .grid-two,
+      .grid-three {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .grid-two {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .grid-three {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      label {
+        display: grid;
+        gap: 0.35rem;
+        font-size: 0.82rem;
+        color: var(--subtle);
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid #b6c5df;
+        border-radius: 8px;
+        padding: 0.55rem 0.65rem;
+        font-size: 0.9rem;
+        color: var(--text);
+        background: #fff;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 90px;
+      }
+
+      input[type="checkbox"] {
+        width: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.45rem;
+        text-align: left;
+      }
+
+      th {
+        background: #f1f5fc;
+        color: #425067;
+      }
+
+      .center-cell {
+        text-align: center;
+      }
+
+      @media (max-width: 640px) {
+        .app-shell {
+          width: 96vw;
+          margin-top: 1rem;
+        }
+      }
     </style>
   </head>
   <body>
-    <main class="button-panel" aria-label="Financial category buttons">
-      <h1>Categories</h1>
-      <button class="revenue" type="button">Revenue</button>
-      <button class="expenses" type="button">Expenses</button>
-      <button class="assets" type="button">Assets</button>
-      <button class="liabilities" type="button">Liabilities</button>
-    </main>
+    <div class="app-shell">
+      <header class="header">
+        <div>
+          <h1>Parcel Service Package Updater</h1>
+          <p class="subtitle">Build and maintain OneStream parcel service package and distribution plans.</p>
+        </div>
+        <span class="mode-pill">PLAN MODE</span>
+      </header>
+
+      <nav class="tabs" aria-label="Plan mode sections">
+        <button class="tab-button" id="tab-packages" data-tab="packages" type="button" aria-selected="true">Packages</button>
+        <button class="tab-button" id="tab-distributions" data-tab="distributions" type="button" aria-selected="false">Distributions</button>
+      </nav>
+
+      <section class="panel tab-panel" id="panel-packages" aria-label="Package management">
+        <div class="panel-header">
+          <h2>Packages</h2>
+          <button class="button primary" id="add-package" type="button">Add New Package</button>
+        </div>
+        <div class="package-list" id="package-list"></div>
+      </section>
+
+      <section class="panel tab-panel" id="panel-distributions" aria-label="Distribution management" hidden>
+        <div class="panel-header">
+          <h2>Distributions</h2>
+          <button class="button primary" id="add-distribution" type="button">Add Distribution</button>
+        </div>
+        <div class="distribution-list" id="distribution-list"></div>
+      </section>
+    </div>
+
+    <template id="package-template">
+      <article class="package-card">
+        <div class="item-head">
+          <span class="item-title"></span>
+        </div>
+
+        <div class="grid-two">
+          <label>
+            Package Name
+            <input name="packageName" type="text" placeholder="Enter package name" />
+          </label>
+        </div>
+
+        <h3 class="section-title">Delivery Details</h3>
+        <div class="grid-three">
+          <label>
+            Delivery Type
+            <select name="deliveryType">
+              <option>Mail (One Email)</option>
+              <option>Mail Individual Emails</option>
+            </select>
+          </label>
+          <label>
+            Distribution Group
+            <select name="distributionGroup">
+              <option>Finance Leadership</option>
+              <option>Store Operations</option>
+              <option>Corporate Reporting</option>
+              <option>Regional Controllers</option>
+            </select>
+          </label>
+          <label>
+            Location Parameter
+            <input name="locationParam" type="text" placeholder="Enter location" />
+          </label>
+        </div>
+
+        <div class="grid-two">
+          <label>
+            Email Title (Default)
+            <input name="emailTitle" type="text" value="Default" />
+          </label>
+          <label>
+            Email Message (Default)
+            <textarea name="emailMessage">Default</textarea>
+          </label>
+        </div>
+
+        <h3 class="section-title">Package Contents</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>File Path</th>
+              <th>Output Filename</th>
+              <th>Access Group</th>
+              <th>Enabled</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input name="filePath" type="text" placeholder="/reports/parcel-service" /></td>
+              <td><input name="outputFilename" type="text" placeholder="ParcelOutput.csv" /></td>
+              <td><input name="accessGroup" type="text" placeholder="Parcel_Admins" /></td>
+              <td class="center-cell"><input name="enabled" type="checkbox" checked /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 class="section-title">Supplied Parameters (Static)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Literal Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>param_Consol</td>
+              <td>USD</td>
+            </tr>
+            <tr>
+              <td>Param_Store_Entities</td>
+              <td>STORE_REG</td>
+            </tr>
+            <tr>
+              <td>Param_Time</td>
+              <td>|!Param_Time_Input!|</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </template>
+
+    <template id="distribution-template">
+      <article class="distribution-card">
+        <div class="item-head">
+          <span class="item-title"></span>
+        </div>
+
+        <h3 class="section-title">Distribution Details</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Public</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input name="distributionName" type="text" placeholder="Enter distribution name" /></td>
+              <td class="center-cell"><input name="public" type="checkbox" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="panel-header" style="margin: 0">
+          <h3 class="section-title">Users</h3>
+          <button class="button secondary add-user-row" type="button">Add User</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Alternate Email</th>
+              <th>Enabled</th>
+            </tr>
+          </thead>
+          <tbody class="distribution-users"></tbody>
+        </table>
+      </article>
+    </template>
+
+    <template id="distribution-user-row-template">
+      <tr>
+        <td><input name="user" type="text" placeholder="Enter user" /></td>
+        <td><input name="alternateEmail" type="email" placeholder="Enter alternate email" /></td>
+        <td class="center-cell"><input name="enabled" type="checkbox" checked /></td>
+      </tr>
+    </template>
+
+    <script>
+      const tabButtons = document.querySelectorAll(".tab-button");
+      const panelPackages = document.getElementById("panel-packages");
+      const panelDistributions = document.getElementById("panel-distributions");
+
+      const packageList = document.getElementById("package-list");
+      const addPackageBtn = document.getElementById("add-package");
+      const packageTemplate = document.getElementById("package-template");
+
+      const distributionList = document.getElementById("distribution-list");
+      const addDistributionBtn = document.getElementById("add-distribution");
+      const distributionTemplate = document.getElementById("distribution-template");
+      const distributionUserRowTemplate = document.getElementById("distribution-user-row-template");
+
+      let packageCounter = 0;
+      let distributionCounter = 0;
+
+      function setActiveTab(tabName) {
+        const isPackages = tabName === "packages";
+
+        panelPackages.hidden = !isPackages;
+        panelDistributions.hidden = isPackages;
+
+        tabButtons.forEach((button) => {
+          button.setAttribute("aria-selected", String(button.dataset.tab === tabName));
+        });
+      }
+
+      function addPackage() {
+        packageCounter += 1;
+        const fragment = packageTemplate.content.cloneNode(true);
+        const card = fragment.querySelector(".package-card");
+        const title = card.querySelector(".item-title");
+        const nameInput = card.querySelector('input[name="packageName"]');
+
+        title.textContent = `Package ${packageCounter}`;
+        nameInput.addEventListener("input", () => {
+          const trimmedName = nameInput.value.trim();
+          title.textContent = trimmedName || `Package ${packageCounter}`;
+        });
+
+        packageList.appendChild(fragment);
+      }
+
+      function addDistributionUserRow(usersContainer) {
+        const row = distributionUserRowTemplate.content.cloneNode(true);
+        usersContainer.appendChild(row);
+      }
+
+      function addDistribution() {
+        distributionCounter += 1;
+        const fragment = distributionTemplate.content.cloneNode(true);
+        const card = fragment.querySelector(".distribution-card");
+        const title = card.querySelector(".item-title");
+        const nameInput = card.querySelector('input[name="distributionName"]');
+        const addUserButton = card.querySelector(".add-user-row");
+        const usersContainer = card.querySelector(".distribution-users");
+
+        title.textContent = `Distribution ${distributionCounter}`;
+        nameInput.addEventListener("input", () => {
+          const trimmedName = nameInput.value.trim();
+          title.textContent = trimmedName || `Distribution ${distributionCounter}`;
+        });
+
+        addUserButton.addEventListener("click", () => addDistributionUserRow(usersContainer));
+
+        addDistributionUserRow(usersContainer);
+        distributionList.appendChild(fragment);
+      }
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+      });
+
+      addPackageBtn.addEventListener("click", addPackage);
+      addDistributionBtn.addEventListener("click", addDistribution);
+
+      addPackage();
+      addDistribution();
+    </script>
   </body>
 </html>
