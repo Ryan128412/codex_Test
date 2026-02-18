@@ -37,6 +37,8 @@
 
       .header,
       .panel,
+      .package-card,
+      .distribution-card {
       .package-card {
         background: var(--card);
         border: 1px solid var(--border);
@@ -75,6 +77,32 @@
         font-size: 0.82rem;
       }
 
+      .tabs {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .tab-button {
+        border: 1px solid #b8caeb;
+        background: #eaf1ff;
+        color: var(--primary-strong);
+        border-radius: 10px;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .tab-button[aria-selected="true"] {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+      }
+
+      .tab-panel[hidden] {
+        display: none;
+      }
+
       .panel {
         padding: 1rem 1.2rem;
       }
@@ -110,17 +138,28 @@
         background: var(--primary-strong);
       }
 
+      .button.secondary {
+        background: #edf3ff;
+        color: var(--primary-strong);
+        border: 1px solid #bbcdf1;
+      }
+
+      .package-list,
+      .distribution-list {
       .package-list {
         display: grid;
         gap: 1rem;
       }
 
+      .package-card,
+      .distribution-card {
       .package-card {
         padding: 1rem;
         display: grid;
         gap: 0.9rem;
       }
 
+      .item-head {
       .package-head {
         display: flex;
         justify-content: space-between;
@@ -129,6 +168,7 @@
         gap: 0.75rem;
       }
 
+      .item-title {
       .package-title {
         font-weight: 700;
       }
@@ -160,6 +200,19 @@
         color: var(--subtle);
       }
 
+      }
+
+      .grid-three {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      label {
+        display: grid;
+        gap: 0.35rem;
+        font-size: 0.82rem;
+        color: var(--subtle);
+      }
+
       input,
       select,
       textarea {
@@ -175,6 +228,10 @@
       textarea {
         resize: vertical;
         min-height: 90px;
+      }
+
+      input[type="checkbox"] {
+        width: auto;
       }
 
       table {
@@ -195,6 +252,8 @@
         color: #425067;
       }
 
+      .center-cell {
+        text-align: center;
       .empty {
         color: var(--subtle);
         font-style: italic;
@@ -216,11 +275,18 @@
       <header class="header">
         <div>
           <h1>Parcel Service Package Updater</h1>
+          <p class="subtitle">Build and maintain OneStream parcel service package and distribution plans.</p>
           <p class="subtitle">Build and maintain OneStream parcel service package plans.</p>
         </div>
         <span class="mode-pill">PLAN MODE</span>
       </header>
 
+      <nav class="tabs" aria-label="Plan mode sections">
+        <button class="tab-button" id="tab-packages" data-tab="packages" type="button" aria-selected="true">Packages</button>
+        <button class="tab-button" id="tab-distributions" data-tab="distributions" type="button" aria-selected="false">Distributions</button>
+      </nav>
+
+      <section class="panel tab-panel" id="panel-packages" aria-label="Package management">
       <section class="panel" aria-label="Package management">
         <div class="panel-header">
           <h2>Packages</h2>
@@ -228,10 +294,27 @@
         </div>
         <div class="package-list" id="package-list"></div>
       </section>
+
+      <section class="panel tab-panel" id="panel-distributions" aria-label="Distribution management" hidden>
+        <div class="panel-header">
+          <h2>Distributions</h2>
+          <button class="button primary" id="add-distribution" type="button">Add Distribution</button>
+        </div>
+        <div class="distribution-list" id="distribution-list"></div>
+      </section>
     </div>
 
     <template id="package-template">
       <article class="package-card">
+        <div class="item-head">
+          <span class="item-title"></span>
+        </div>
+
+        <div class="grid-two">
+          <label>
+            Package Name
+            <input name="packageName" type="text" placeholder="Enter package name" />
+          </label>
         <div class="package-head">
           <span class="package-title"></span>
         </div>
@@ -256,6 +339,7 @@
           </label>
           <label>
             Location Parameter
+            <input name="locationParam" type="text" placeholder="Enter location" />
             <select name="locationParam">
               <option>North America</option>
               <option>EMEA</option>
@@ -291,6 +375,7 @@
               <td><input name="filePath" type="text" placeholder="/reports/parcel-service" /></td>
               <td><input name="outputFilename" type="text" placeholder="ParcelOutput.csv" /></td>
               <td><input name="accessGroup" type="text" placeholder="Parcel_Admins" /></td>
+              <td class="center-cell"><input name="enabled" type="checkbox" checked /></td>
               <td style="text-align: center"><input name="enabled" type="checkbox" checked /></td>
             </tr>
           </tbody>
@@ -322,6 +407,81 @@
       </article>
     </template>
 
+    <template id="distribution-template">
+      <article class="distribution-card">
+        <div class="item-head">
+          <span class="item-title"></span>
+        </div>
+
+        <h3 class="section-title">Distribution Details</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Public</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input name="distributionName" type="text" placeholder="Enter distribution name" /></td>
+              <td class="center-cell"><input name="public" type="checkbox" /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="panel-header" style="margin: 0">
+          <h3 class="section-title">Users</h3>
+          <button class="button secondary add-user-row" type="button">Add User</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Alternate Email</th>
+              <th>Enabled</th>
+            </tr>
+          </thead>
+          <tbody class="distribution-users"></tbody>
+        </table>
+      </article>
+    </template>
+
+    <template id="distribution-user-row-template">
+      <tr>
+        <td><input name="user" type="text" placeholder="Enter user" /></td>
+        <td><input name="alternateEmail" type="email" placeholder="Enter alternate email" /></td>
+        <td class="center-cell"><input name="enabled" type="checkbox" checked /></td>
+      </tr>
+    </template>
+
+    <script>
+      const tabButtons = document.querySelectorAll(".tab-button");
+      const panelPackages = document.getElementById("panel-packages");
+      const panelDistributions = document.getElementById("panel-distributions");
+
+      const packageList = document.getElementById("package-list");
+      const addPackageBtn = document.getElementById("add-package");
+      const packageTemplate = document.getElementById("package-template");
+
+      const distributionList = document.getElementById("distribution-list");
+      const addDistributionBtn = document.getElementById("add-distribution");
+      const distributionTemplate = document.getElementById("distribution-template");
+      const distributionUserRowTemplate = document.getElementById("distribution-user-row-template");
+
+      let packageCounter = 0;
+      let distributionCounter = 0;
+
+      function setActiveTab(tabName) {
+        const isPackages = tabName === "packages";
+
+        panelPackages.hidden = !isPackages;
+        panelDistributions.hidden = isPackages;
+
+        tabButtons.forEach((button) => {
+          button.setAttribute("aria-selected", String(button.dataset.tab === tabName));
+        });
+      }
     <script>
       const packageList = document.getElementById("package-list");
       const addPackageBtn = document.getElementById("add-package");
@@ -331,6 +491,54 @@
       function addPackage() {
         packageCounter += 1;
         const fragment = packageTemplate.content.cloneNode(true);
+        const card = fragment.querySelector(".package-card");
+        const title = card.querySelector(".item-title");
+        const nameInput = card.querySelector('input[name="packageName"]');
+
+        title.textContent = `Package ${packageCounter}`;
+        nameInput.addEventListener("input", () => {
+          const trimmedName = nameInput.value.trim();
+          title.textContent = trimmedName || `Package ${packageCounter}`;
+        });
+
+        packageList.appendChild(fragment);
+      }
+
+      function addDistributionUserRow(usersContainer) {
+        const row = distributionUserRowTemplate.content.cloneNode(true);
+        usersContainer.appendChild(row);
+      }
+
+      function addDistribution() {
+        distributionCounter += 1;
+        const fragment = distributionTemplate.content.cloneNode(true);
+        const card = fragment.querySelector(".distribution-card");
+        const title = card.querySelector(".item-title");
+        const nameInput = card.querySelector('input[name="distributionName"]');
+        const addUserButton = card.querySelector(".add-user-row");
+        const usersContainer = card.querySelector(".distribution-users");
+
+        title.textContent = `Distribution ${distributionCounter}`;
+        nameInput.addEventListener("input", () => {
+          const trimmedName = nameInput.value.trim();
+          title.textContent = trimmedName || `Distribution ${distributionCounter}`;
+        });
+
+        addUserButton.addEventListener("click", () => addDistributionUserRow(usersContainer));
+
+        addDistributionUserRow(usersContainer);
+        distributionList.appendChild(fragment);
+      }
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+      });
+
+      addPackageBtn.addEventListener("click", addPackage);
+      addDistributionBtn.addEventListener("click", addDistribution);
+
+      addPackage();
+      addDistribution();
         fragment.querySelector(".package-title").textContent = `Package ${packageCounter}`;
         packageList.appendChild(fragment);
       }
