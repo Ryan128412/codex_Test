@@ -472,7 +472,6 @@
       const uploadErrorBanner = document.getElementById("upload-error");
 
       const distributions = [];
-      const distributionCardsByName = new Map();
       let packageCounter = 0;
       let distributionCounter = 0;
 
@@ -626,7 +625,6 @@
           const name = nameInput.value.trim();
           if (name && !distributions.includes(name)) {
             distributions.push(name);
-            distributionCardsByName.set(name, card);
             refreshDistributionSelects();
           }
           markSaved(saveButton);
@@ -642,7 +640,6 @@
 
         if (data.distributionName && !distributions.includes(data.distributionName)) {
           distributions.push(data.distributionName);
-          distributionCardsByName.set(data.distributionName, card);
           refreshDistributionSelects();
         }
       }
@@ -783,7 +780,6 @@
         distributionList.innerHTML = "";
         packageList.innerHTML = "";
         distributions.length = 0;
-        distributionCardsByName.clear();
         packageCounter = 0;
         distributionCounter = 0;
 
