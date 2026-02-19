@@ -75,6 +75,13 @@
         font-weight: 700;
       }
 
+      .header-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
       .tabs {
         display: flex;
         gap: 0.5rem;
@@ -239,7 +246,11 @@
           <h1>Parcel Service Setup for OneStream</h1>
           <p class="subtitle">Create and maintain packages and distributions in plan mode.</p>
         </div>
-        <span class="pill">PLAN MODE</span>
+        <div class="header-actions">
+          <button id="export-xlsx" class="button secondary" type="button">Export Excel</button>
+          <button id="export-csv" class="button secondary" type="button">Export CSV</button>
+          <span class="pill">PLAN MODE</span>
+        </div>
       </header>
 
       <section class="card panel">
@@ -412,16 +423,15 @@
       const tabs = document.querySelectorAll(".tab");
       const packagePanel = document.getElementById("packages");
       const distributionPanel = document.getElementById("distributions");
-
       const packageList = document.getElementById("package-list");
       const distributionList = document.getElementById("distribution-list");
       const packageTemplate = document.getElementById("package-template");
       const distributionTemplate = document.getElementById("distribution-template");
       const userRowTemplate = document.getElementById("distribution-user-row-template");
 
-      const distributions = [];
       let packageCounter = 0;
       let distributionCounter = 0;
+      const distributions = [];
 
       function setTab(name) {
         const packagesActive = name === "packages";
@@ -430,33 +440,6 @@
         tabs.forEach((tab) => {
           tab.setAttribute("aria-selected", String(tab.dataset.tab === name));
         });
-      }
-
-      function markSaved(button) {
-        const status = button.nextElementSibling;
-        status.hidden = false;
-        window.setTimeout(() => {
-          status.hidden = true;
-        }, 1200);
-      }
-
-      function populateDistributionSelect(select) {
-        select.innerHTML = "";
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.textContent = distributions.length ? "Select a distribution" : "No distributions yet";
-        select.appendChild(defaultOption);
-
-        distributions.forEach((name) => {
-          const option = document.createElement("option");
-          option.value = name;
-          option.textContent = name;
-          select.appendChild(option);
-        });
-      }
-
-      function refreshDistributionSelects() {
-        document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
       }
 
       function markSaved(button) {
@@ -491,10 +474,19 @@
         document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
       }
 
-      function addPackageRow(data = {}) {
-        packageCounter += 1;
-        const packageNumber = packageCounter;
+      function refreshDistributionCache() {
+        distributions.length = 0;
+        document.querySelectorAll('#distribution-list input[name="distributionName"]').forEach((input) => {
+          const name = input.value.trim();
+          if (name && !distributions.includes(name)) {
+            distributions.push(name);
+          }
+        });
+        refreshDistributionSelects();
+      }
 
+      function addPackageRow() {
+        packageCounter += 1;
         const fragment = packageTemplate.content.cloneNode(true);
         const card = fragment.querySelector(".item-card");
         const title = card.querySelector(".package-title");
@@ -504,8 +496,7 @@
 
         title.textContent = `Package ${packageCounter}`;
         nameInput.addEventListener("input", () => {
-          const value = nameInput.value.trim();
-          title.textContent = value || `Package ${packageCounter}`;
+          title.textContent = nameInput.value.trim() || `Package ${packageCounter}`;
         });
 
         populateDistributionSelect(distributionSelect);
@@ -514,14 +505,11 @@
       }
 
       function addUserRow(container) {
-        const row = userRowTemplate.content.cloneNode(true);
-        container.appendChild(row);
+        container.appendChild(userRowTemplate.content.cloneNode(true));
       }
 
-      function addDistributionRow(data = {}) {
+      function addDistributionRow() {
         distributionCounter += 1;
-        const distributionNumber = distributionCounter;
-
         const fragment = distributionTemplate.content.cloneNode(true);
         const card = fragment.querySelector(".item-card");
         const title = card.querySelector(".distribution-title");
@@ -530,37 +518,129 @@
         const users = card.querySelector(".users");
         const saveButton = card.querySelector(".save-distribution");
 
-        title.textContent = `Distribution ${distributionNumber}`;
+        title.textContent = `Distribution ${distributionCounter}`;
         nameInput.addEventListener("input", () => {
-          const value = nameInput.value.trim();
-          title.textContent = value || `Distribution ${distributionCounter}`;
+          title.textContent = nameInput.value.trim() || `Distribution ${distributionCounter}`;
+          refreshDistributionCache();
         });
 
         addUserButton.addEventListener("click", () => addUserRow(users));
         saveButton.addEventListener("click", () => {
-          const name = nameInput.value.trim();
-          if (name && !distributions.includes(name)) {
-            distributions.push(name);
-            refreshDistributionSelects();
-          }
+          refreshDistributionCache();
           markSaved(saveButton);
         });
 
         addUserRow(users);
         distributionList.appendChild(fragment);
+      }
 
-        if (data.distributionName && !distributions.includes(data.distributionName)) {
-          distributions.push(data.distributionName);
-          refreshDistributionSelects();
-        }
+      function collectExportData() {
+        refreshDistributionCache();
+
+        const packageRows = [];
+        const packageContentRows = [];
+        const packageParameterRows = [];
+
+        document.querySelectorAll("#package-list .item-card").forEach((card, index) => {
+          const packageId = `PKG-${index + 1}`;
+
+          packageRows.push({
+            PackageID: packageId,
+            PackageName: card.querySelector('input[name="packageName"]').value.trim(),
+            DistributionGroup: card.querySelector('select[name="distributionGroup"]').value,
+            DeliveryType: card.querySelector('select[name="deliveryType"]').value,
+            EmailTitle: card.querySelector('input[name="emailTitle"]').value,
+            EmailMessage: card.querySelector('textarea[name="emailMessage"]').value,
+            Location: card.querySelector('input[name="location"]').value,
+          });
+
+          packageContentRows.push({
+            PackageID: packageId,
+            FilePath: card.querySelector('input[name="filePath"]').value,
+            OutputFilename: card.querySelector('input[name="outputFilename"]').value,
+            AccessGroup: card.querySelector('input[name="accessGroup"]').value,
+            Enabled: card.querySelector('input[name="packageEnabled"]').checked ? "TRUE" : "FALSE",
+          });
+
+          packageParameterRows.push(
+            { PackageID: packageId, ParameterName: "param_Consol", LiteralValue: "USD" },
+            { PackageID: packageId, ParameterName: "Param_Store_Entities", LiteralValue: "STORE_REG" },
+            { PackageID: packageId, ParameterName: "Param_Time", LiteralValue: "|!Param_Time_Input!|" }
+          );
+        });
+
+        const distributionRows = [];
+        const distributionUserRows = [];
+
+        document.querySelectorAll("#distribution-list .item-card").forEach((card, index) => {
+          const distributionId = `DST-${index + 1}`;
+
+          distributionRows.push({
+            DistributionID: distributionId,
+            DistributionName: card.querySelector('input[name="distributionName"]').value.trim(),
+            IsPublic: card.querySelector('select[name="isPublic"]').value,
+          });
+
+          card.querySelectorAll("tbody.users tr").forEach((row, userIndex) => {
+            distributionUserRows.push({
+              DistributionID: distributionId,
+              UserSequence: userIndex + 1,
+              User: row.querySelector('input[name="user"]').value,
+              AlternateEmail: row.querySelector('input[name="alternateEmail"]').value,
+              Enabled: row.querySelector('input[name="enabled"]').checked ? "TRUE" : "FALSE",
+            });
+          });
+        });
+
+        return {
+          Packages: packageRows,
+          PackageContents: packageContentRows,
+          PackageParameters: packageParameterRows,
+          Distributions: distributionRows,
+          DistributionUsers: distributionUserRows,
+        };
+      }
+
+      function exportXlsx() {
+        const data = collectExportData();
+        const workbook = XLSX.utils.book_new();
+
+        Object.entries(data).forEach(([sheetName, rows]) => {
+          const worksheet = XLSX.utils.json_to_sheet(rows);
+          XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+        });
+
+        XLSX.writeFile(workbook, "ParcelServicePlanExport.xlsx");
+      }
+
+      function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = filename;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function exportCsv() {
+        const data = collectExportData();
+
+        Object.entries(data).forEach(([tableName, rows]) => {
+          const worksheet = XLSX.utils.json_to_sheet(rows);
+          const csvText = XLSX.utils.sheet_to_csv(worksheet);
+          downloadFile(csvText, `${tableName}.csv`, "text/csv;charset=utf-8;");
+        });
       }
 
       tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
-      document.getElementById("add-package").addEventListener("click", addPackage);
-      document.getElementById("add-distribution").addEventListener("click", addDistribution);
+      document.getElementById("add-package").addEventListener("click", addPackageRow);
+      document.getElementById("add-distribution").addEventListener("click", addDistributionRow);
+      document.getElementById("export-xlsx").addEventListener("click", exportXlsx);
+      document.getElementById("export-csv").addEventListener("click", exportCsv);
 
-      addPackage();
-      addDistribution();
+      addPackageRow();
+      addDistributionRow();
     </script>
   </body>
 </html>
