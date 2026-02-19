@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OneStream Parcel Service - Plan Mode</title>
+    <title>OneStream Parcel Service</title>
     <style>
       :root { font-family: Inter, "Segoe UI", Arial, sans-serif; --bg: #f4f7fb; --card: #fff; --border: #d4deef; --text: #24324a; --muted: #5d6c85; --primary: #1e50a2; --primary-strong: #153d7d; }
       * { box-sizing: border-box; }
@@ -11,45 +11,30 @@
       .shell { width: min(1200px, 94vw); margin: 1.5rem auto 2rem; display: grid; gap: 1rem; }
       .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 8px 22px rgba(35, 50, 74, 0.08); }
       header { padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
-      h1,h2,h3 { margin: 0; } h1 { font-size: 1.35rem; }
-      .subtitle { margin-top: 0.3rem; color: var(--muted); font-size: 0.92rem; }
-      .pill { border: 1px solid #bfd2f9; background: #eaf1ff; color: var(--primary-strong); border-radius: 999px; padding: 0.35rem 0.7rem; font-size: 0.8rem; font-weight: 700; }
-      .tabs { display: flex; gap: 0.5rem; }
-      .tab { border: 1px solid #bfd2f9; background: #eaf1ff; color: var(--primary-strong); border-radius: 8px; padding: 0.55rem 0.8rem; cursor: pointer; font-weight: 700; }
+      h1,h2,h3 { margin: 0; } .subtitle { margin-top: 0.3rem; color: var(--muted); font-size: 0.92rem; }
+      .tabs { display: flex; gap: 0.5rem; } .tab { border: 1px solid #bfd2f9; background: #eaf1ff; color: var(--primary-strong); border-radius: 8px; padding: 0.55rem 0.8rem; cursor: pointer; font-weight: 700; }
       .tab[aria-selected="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
       .panel { padding: 1rem; } .panel[hidden] { display: none; }
       .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; gap: 0.75rem; }
       .button { border: 0; border-radius: 8px; padding: 0.55rem 0.85rem; font-weight: 600; cursor: pointer; }
-      .button.primary { background: var(--primary); color: #fff; } .button.primary:hover { background: var(--primary-strong); }
-      .button.secondary { border: 1px solid #bfd2f9; background: #eef4ff; color: var(--primary-strong); }
+      .button.primary { background: var(--primary); color: #fff; } .button.secondary { border: 1px solid #bfd2f9; background: #eef4ff; color: var(--primary-strong); }
       .list { display: grid; gap: 1rem; } .item-card { border: 1px solid var(--border); border-radius: 10px; padding: 0.9rem; display: grid; gap: 0.9rem; }
       .item-head { display: flex; justify-content: space-between; gap: 0.7rem; flex-wrap: wrap; align-items: center; }
       .title { font-weight: 700; } .section-title { color: var(--muted); font-size: 0.9rem; }
       .grid { display: grid; gap: 0.75rem; } .grid.two { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); } .grid.three { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
       label { display: grid; gap: 0.35rem; color: var(--muted); font-size: 0.82rem; }
-      input,select,textarea { width: 100%; border: 1px solid #c4d2ec; border-radius: 8px; padding: 0.5rem 0.55rem; font: inherit; color: var(--text); background: #fff; }
-      textarea { min-height: 84px; resize: vertical; }
-      table { width: 100%; border-collapse: collapse; }
+      input,select,textarea { width: 100%; border: 1px solid #c4d2ec; border-radius: 8px; padding: 0.5rem 0.55rem; font: inherit; color: var(--text); }
+      textarea { min-height: 84px; } table { width: 100%; border-collapse: collapse; }
       th,td { border: 1px solid #d8e1f1; padding: 0.45rem; text-align: left; font-size: 0.86rem; }
       th { background: #f1f5fd; color: #3f4d65; } td.center,th.center { text-align: center; }
-      .status { font-size: 0.82rem; color: #176d31; font-weight: 700; }
-      .toolbar { display:flex; gap:.5rem; align-items:center; flex-wrap: wrap; }
-      .msg { color:#176d31; font-size:.85rem; }
-      .error { color:#a01616; }
+      .toolbar { display:flex; gap:.5rem; align-items:center; flex-wrap: wrap; } .msg { color:#176d31; font-size:.85rem; } .error { color:#a01616; }
     </style>
   </head>
   <body>
     <main class="shell">
-      <header class="card">
-        <div>
-          <h1>Parcel Service Setup for OneStream</h1>
-          <p class="subtitle">Create and maintain packages and distributions in plan mode.</p>
-        </div>
-        <span class="pill">PLAN MODE</span>
-      </header>
-
+      <header class="card"><div><h1>Parcel Service Setup for OneStream</h1><p class="subtitle">Create, import, persist, and export packages and distributions.</p></div></header>
       <section class="card panel">
-        <div class="tabs" role="tablist" aria-label="pages">
+        <div class="tabs" role="tablist">
           <button class="tab" role="tab" aria-selected="true" data-tab="packages">Packages</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="distributions">Distributions</button>
         </div>
@@ -61,162 +46,67 @@
         </div>
       </section>
 
-      <section id="packages" class="card panel">
-        <div class="panel-header">
-          <h2>Packages</h2>
-          <button id="add-package" class="button primary" type="button">Add Package</button>
-        </div>
-        <div id="package-list" class="list"></div>
-      </section>
-
-      <section id="distributions" class="card panel" hidden>
-        <div class="panel-header">
-          <h2>Distributions</h2>
-          <button id="add-distribution" class="button primary" type="button">Add Distribution</button>
-        </div>
-        <div id="distribution-list" class="list"></div>
-      </section>
+      <section id="packages" class="card panel"><div class="panel-header"><h2>Packages</h2><button id="add-package" class="button primary" type="button">Add Package</button></div><div id="package-list" class="list"></div></section>
+      <section id="distributions" class="card panel" hidden><div class="panel-header"><h2>Distributions</h2><button id="add-distribution" class="button primary" type="button">Add Distribution</button></div><div id="distribution-list" class="list"></div></section>
     </main>
 
-    <template id="package-template">
-      <article class="item-card">
-        <div class="item-head">
-          <span class="title package-title"></span>
-          <div>
-            <button class="button secondary save-package" type="button">Save Package</button>
-            <span class="status" hidden>Saved</span>
-          </div>
-        </div>
-        <div class="grid two">
-          <label>Package Name<input type="text" name="packageName" placeholder="Enter package name" /></label>
-          <label>Distribution Group<select name="distributionGroup"></select></label>
-        </div>
-        <div class="grid three">
-          <label>Delivery Type<select name="deliveryType"><option>Mail (One email)</option><option>Mail Individual Emails</option></select></label>
-          <label>Email Title (Default)<input type="text" name="emailTitle" value="Default" /></label>
-          <label>Email Message (Default)<textarea name="emailMessage">Default</textarea></label>
-        </div>
-        <h3 class="section-title">Package Contents</h3>
-        <table><thead><tr><th>File Path</th><th>Output Filename</th><th>Access Group</th><th class="center">Enabled</th></tr></thead>
-          <tbody><tr><td><input type="text" name="filePath" placeholder="/path/to/output" /></td><td><input type="text" name="outputFilename" placeholder="report.csv" /></td><td><input type="text" name="accessGroup" placeholder="Enter access group" /></td><td class="center"><input type="checkbox" name="packageEnabled" checked /></td></tr></tbody>
-        </table>
-        <h3 class="section-title">Location Parameter</h3>
-        <label>Location<input type="text" name="location" placeholder="Enter location" /></label>
-        <h3 class="section-title">Supplied Parameters (Static)</h3>
-        <table><thead><tr><th>Name</th><th>Literal Value</th></tr></thead><tbody>
-          <tr><td>param_Consol</td><td><input type="text" value="USD" readonly /></td></tr>
-          <tr><td>Param_Store_Entities</td><td><input type="text" value="STORE_REG" readonly /></td></tr>
-          <tr><td>Param_Time</td><td><input type="text" value="|!Param_Time_Input!|" readonly /></td></tr>
-        </tbody></table>
-      </article>
-    </template>
+    <template id="package-template"><article class="item-card">
+      <div class="item-head"><span class="title package-title"></span><button class="button secondary save-package" type="button">Save Package</button></div>
+      <div class="grid two"><label>Package Name<input type="text" name="packageName" /></label><label>Distribution Group<select name="distributionGroup"></select></label></div>
+      <div class="grid three"><label>Delivery Type<select name="deliveryType"><option>Mail (One email)</option><option>Mail Individual Emails</option></select></label><label>Email Title (Default)<input type="text" name="emailTitle" value="Default" /></label><label>Email Message (Default)<textarea name="emailMessage">Default</textarea></label></div>
+      <h3 class="section-title">Package Contents</h3>
+      <table><thead><tr><th>File Path</th><th>Output Filename</th><th>Access Group</th><th class="center">Enabled</th></tr></thead><tbody><tr><td><input type="text" name="filePath" /></td><td><input type="text" name="outputFilename" /></td><td><input type="text" name="accessGroup" /></td><td class="center"><input type="checkbox" name="packageEnabled" checked /></td></tr></tbody></table>
+      <h3 class="section-title">Location Parameter</h3><label>Location<input type="text" name="location" /></label>
+      <h3 class="section-title">Supplied Parameters (Static)</h3>
+      <table><thead><tr><th>Name</th><th>Literal Value</th></tr></thead><tbody>
+        <tr><td>param_Consol</td><td><input value="USD" readonly /></td></tr>
+        <tr><td>Param_Store_Entities</td><td><input value="STORE_REG" readonly /></td></tr>
+        <tr><td>Param_Time</td><td><input value="|!Param_Time_Input!|" readonly /></td></tr>
+      </tbody></table>
+    </article></template>
 
-    <template id="distribution-template">
-      <article class="item-card">
-        <div class="item-head">
-          <span class="title distribution-title"></span>
-          <div>
-            <button class="button secondary save-distribution" type="button">Save Distribution</button>
-            <span class="status" hidden>Saved</span>
-          </div>
-        </div>
-        <div class="grid two">
-          <label>Distribution Name<input name="distributionName" type="text" placeholder="Enter distribution name" /></label>
-          <label>Is Public<select name="isPublic"><option value="enabled">Enabled</option><option value="disabled">Disabled</option></select></label>
-        </div>
-        <div class="panel-header" style="margin: 0"><h3 class="section-title">Users</h3><button class="button secondary add-user" type="button">Add User</button></div>
-        <table><thead><tr><th>User</th><th>Alternate Email</th><th class="center">Enabled</th></tr></thead><tbody class="users"></tbody></table>
-      </article>
-    </template>
+    <template id="distribution-template"><article class="item-card">
+      <div class="item-head"><span class="title distribution-title"></span><button class="button secondary save-distribution" type="button">Save Distribution</button></div>
+      <div class="grid two"><label>Distribution Name<input name="distributionName" type="text" /></label><label>Is Public<select name="isPublic"><option value="enabled">Enabled</option><option value="disabled">Disabled</option></select></label></div>
+      <div class="panel-header" style="margin:0"><h3 class="section-title">Users</h3><button class="button secondary add-user" type="button">Add User</button></div>
+      <table><thead><tr><th>User</th><th>Alternate Email</th><th class="center">Enabled</th></tr></thead><tbody class="users"></tbody></table>
+    </article></template>
 
-    <template id="distribution-user-row-template">
-      <tr><td><input name="user" type="text" placeholder="Enter user" /></td><td><input name="alternateEmail" type="email" placeholder="Enter alternate email" /></td><td class="center"><input name="enabled" type="checkbox" checked /></td></tr>
-    </template>
+    <template id="distribution-user-row-template"><tr><td><input name="user" type="text" /></td><td><input name="alternateEmail" type="email" /></td><td class="center"><input name="enabled" type="checkbox" checked /></td></tr></template>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
-      const tabs = document.querySelectorAll(".tab");
-      const packagePanel = document.getElementById("packages");
-      const distributionPanel = document.getElementById("distributions");
-      const packageList = document.getElementById("package-list");
-      const distributionList = document.getElementById("distribution-list");
-      const packageTemplate = document.getElementById("package-template");
-      const distributionTemplate = document.getElementById("distribution-template");
-      const userRowTemplate = document.getElementById("distribution-user-row-template");
-      const globalMsg = document.getElementById("global-msg");
-
+      const tabs = document.querySelectorAll('.tab');
+      const packagePanel = document.getElementById('packages');
+      const distributionPanel = document.getElementById('distributions');
+      const packageList = document.getElementById('package-list');
+      const distributionList = document.getElementById('distribution-list');
+      const packageTemplate = document.getElementById('package-template');
+      const distributionTemplate = document.getElementById('distribution-template');
+      const userRowTemplate = document.getElementById('distribution-user-row-template');
+      const globalMsg = document.getElementById('global-msg');
       let distributionNames = [];
-      let packageCounter = 0;
-      let distributionCounter = 0;
 
-      function setGlobalMsg(message, isError = false) {
-        globalMsg.textContent = message;
-        globalMsg.classList.toggle("error", isError);
-      }
-
-      function setTab(name) {
-        const packagesActive = name === "packages";
-        packagePanel.hidden = !packagesActive;
-        distributionPanel.hidden = packagesActive;
-        tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.tab === name)));
-      }
-
-      function markSaved(button) {
-        const status = button.nextElementSibling;
-        status.hidden = false;
-        window.setTimeout(() => { status.hidden = true; }, 1200);
-      }
-
-      function populateDistributionSelect(select) {
-        const selectedValue = select.value;
-        select.innerHTML = "";
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.textContent = distributionNames.length ? "Select a distribution" : "No distributions yet";
-        select.appendChild(defaultOption);
-        distributionNames.forEach((name) => {
-          const option = document.createElement("option");
-          option.value = name;
-          option.textContent = name;
-          select.appendChild(option);
-        });
-        if (selectedValue && distributionNames.includes(selectedValue)) select.value = selectedValue;
-      }
-
-      function refreshDistributionSelects() {
-        document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
-      }
-
-      function fillPackageCard(card, data = {}) {
-        card.querySelector('input[name="packageName"]').value = data.packageName || "";
-        card.querySelector('select[name="distributionGroup"]').value = data.distributionGroup || "";
-        card.querySelector('select[name="deliveryType"]').value = data.deliveryType || "Mail (One email)";
-        card.querySelector('input[name="emailTitle"]').value = data.emailTitle || "Default";
-        card.querySelector('textarea[name="emailMessage"]').value = data.emailMessage || "Default";
-        card.querySelector('input[name="filePath"]').value = data.filePath || "";
-        card.querySelector('input[name="outputFilename"]').value = data.outputFilename || "";
-        card.querySelector('input[name="accessGroup"]').value = data.accessGroup || "";
-        card.querySelector('input[name="packageEnabled"]').checked = data.packageEnabled !== false;
-        card.querySelector('input[name="location"]').value = data.location || "";
-      }
+      function setGlobalMsg(message, isError = false) { globalMsg.textContent = message; globalMsg.classList.toggle('error', isError); }
+      function setTab(name) { const packagesActive = name === 'packages'; packagePanel.hidden = !packagesActive; distributionPanel.hidden = packagesActive; tabs.forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.tab === name))); }
+      function populateDistributionSelect(select, selected = '') { select.innerHTML = '<option value="">Select a distribution</option>'; distributionNames.forEach((name) => { const option = document.createElement('option'); option.value = name; option.textContent = name; select.appendChild(option); }); select.value = selected && distributionNames.includes(selected) ? selected : ''; }
+      function addUserRow(container, data = {}) { const row = userRowTemplate.content.cloneNode(true); const tr = row.querySelector('tr'); tr.querySelector('input[name="user"]').value = data.user || ''; tr.querySelector('input[name="alternateEmail"]').value = data.alternateEmail || ''; tr.querySelector('input[name="enabled"]').checked = data.enabled !== false; container.appendChild(row); }
 
       function addPackageRow(data = {}) {
-        packageCounter += 1;
         const fragment = packageTemplate.content.cloneNode(true);
-        const card = fragment.querySelector(".item-card");
-        const title = card.querySelector(".package-title");
+        const card = fragment.querySelector('.item-card');
+        card.dataset.id = data.id || '';
         const nameInput = card.querySelector('input[name="packageName"]');
-        const saveButton = card.querySelector(".save-package");
-        const distributionSelect = card.querySelector('select[name="distributionGroup"]');
+        card.querySelector('.package-title').textContent = data.packageName || 'New Package';
+        nameInput.value = data.packageName || '';
+        nameInput.addEventListener('input', () => { card.querySelector('.package-title').textContent = nameInput.value || 'New Package'; });
+        populateDistributionSelect(card.querySelector('select[name="distributionGroup"]'), data.distributionGroup || '');
+        ['deliveryType','emailTitle','emailMessage','filePath','outputFilename','accessGroup','location'].forEach((field) => { const el = card.querySelector(`[name="${field}"]`); if (el) el.value = data[field] || el.value || ''; });
+        card.querySelector('input[name="packageEnabled"]').checked = data.packageEnabled !== false;
 
-        title.textContent = data.packageName || `Package ${packageCounter}`;
-        nameInput.addEventListener("input", () => { title.textContent = nameInput.value.trim() || `Package ${packageCounter}`; });
-        populateDistributionSelect(distributionSelect);
-        fillPackageCard(card, data);
-
-        saveButton.addEventListener("click", async () => {
+        card.querySelector('.save-package').addEventListener('click', async () => {
           const payload = {
-            packageName: card.querySelector('input[name="packageName"]').value,
+            packageName: nameInput.value,
             distributionGroup: card.querySelector('select[name="distributionGroup"]').value,
             deliveryType: card.querySelector('select[name="deliveryType"]').value,
             emailTitle: card.querySelector('input[name="emailTitle"]').value,
@@ -227,156 +117,98 @@
             packageEnabled: card.querySelector('input[name="packageEnabled"]').checked,
             location: card.querySelector('input[name="location"]').value
           };
-
-          const resp = await fetch("/api/packages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-          if (!resp.ok) {
-            const err = await resp.json();
-            setGlobalMsg(err.error || "Package save failed", true);
-            return;
-          }
-          setGlobalMsg("Package saved to database.");
-          markSaved(saveButton);
+          const id = card.dataset.id;
+          const resp = await fetch(id ? `/api/packages/${id}` : '/api/packages', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          if (!resp.ok) { const err = await resp.json(); setGlobalMsg(err.error || 'Package save failed', true); return; }
+          setGlobalMsg('Package saved and reloaded from backend.');
+          await loadFromBackend();
         });
 
         packageList.appendChild(fragment);
       }
 
-      function addUserRow(container, data = {}) {
-        const row = userRowTemplate.content.cloneNode(true);
-        const tr = row.querySelector("tr");
-        tr.querySelector('input[name="user"]').value = data.user || "";
-        tr.querySelector('input[name="alternateEmail"]').value = data.alternateEmail || "";
-        tr.querySelector('input[name="enabled"]').checked = data.enabled !== false;
-        container.appendChild(row);
-      }
-
       function addDistributionRow(data = {}) {
-        distributionCounter += 1;
         const fragment = distributionTemplate.content.cloneNode(true);
-        const card = fragment.querySelector(".item-card");
-        const title = card.querySelector(".distribution-title");
+        const card = fragment.querySelector('.item-card');
+        card.dataset.id = data.id || '';
         const nameInput = card.querySelector('input[name="distributionName"]');
-        const addUserButton = card.querySelector(".add-user");
-        const users = card.querySelector(".users");
-        const saveButton = card.querySelector(".save-distribution");
+        nameInput.value = data.distributionName || '';
+        card.querySelector('.distribution-title').textContent = data.distributionName || 'New Distribution';
+        nameInput.addEventListener('input', () => { card.querySelector('.distribution-title').textContent = nameInput.value || 'New Distribution'; });
+        card.querySelector('select[name="isPublic"]').value = data.isPublic || 'enabled';
+        const users = card.querySelector('.users');
+        (data.users?.length ? data.users : [{}]).forEach((u) => addUserRow(users, u));
+        card.querySelector('.add-user').addEventListener('click', () => addUserRow(users));
 
-        title.textContent = data.distributionName || `Distribution ${distributionCounter}`;
-        nameInput.value = data.distributionName || "";
-        card.querySelector('select[name="isPublic"]').value = data.isPublic || "enabled";
-
-        nameInput.addEventListener("input", () => { title.textContent = nameInput.value.trim() || `Distribution ${distributionCounter}`; });
-        addUserButton.addEventListener("click", () => addUserRow(users));
-
-        (data.users && data.users.length ? data.users : [{}]).forEach((u) => addUserRow(users, u));
-
-        saveButton.addEventListener("click", async () => {
+        card.querySelector('.save-distribution').addEventListener('click', async () => {
           const payload = {
             distributionName: nameInput.value,
             isPublic: card.querySelector('select[name="isPublic"]').value,
-            users: Array.from(users.querySelectorAll("tr")).map((tr) => ({
-              user: tr.querySelector('input[name="user"]').value,
-              alternateEmail: tr.querySelector('input[name="alternateEmail"]').value,
-              enabled: tr.querySelector('input[name="enabled"]').checked
-            }))
+            users: Array.from(users.querySelectorAll('tr')).map((tr) => ({ user: tr.querySelector('input[name="user"]').value, alternateEmail: tr.querySelector('input[name="alternateEmail"]').value, enabled: tr.querySelector('input[name="enabled"]').checked }))
           };
-
-          const resp = await fetch("/api/distributions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-          if (!resp.ok) {
-            const err = await resp.json();
-            setGlobalMsg(err.error || "Distribution save failed", true);
-            return;
-          }
-          if (!distributionNames.includes(payload.distributionName)) {
-            distributionNames.push(payload.distributionName);
-            refreshDistributionSelects();
-          }
-          setGlobalMsg("Distribution saved to database.");
-          markSaved(saveButton);
+          const id = card.dataset.id;
+          const resp = await fetch(id ? `/api/distributions/${id}` : '/api/distributions', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          if (!resp.ok) { const err = await resp.json(); setGlobalMsg(err.error || 'Distribution save failed', true); return; }
+          setGlobalMsg('Distribution saved and distribution dropdowns refreshed.');
+          await loadFromBackend();
         });
 
         distributionList.appendChild(fragment);
       }
 
       async function loadFromBackend() {
-        const resp = await fetch("/api/data");
-        if (!resp.ok) {
-          setGlobalMsg("Failed to load saved data", true);
-          return;
-        }
+        const resp = await fetch('/api/data');
+        if (!resp.ok) { setGlobalMsg('Failed to load data', true); return; }
         const data = await resp.json();
         distributionNames = data.distributions.map((d) => d.distributionName);
-
-        packageList.innerHTML = "";
-        distributionList.innerHTML = "";
-        packageCounter = 0;
-        distributionCounter = 0;
-
-        data.packages.forEach((pkg) => addPackageRow(pkg));
-        data.distributions.forEach((dist) => addDistributionRow(dist));
-
+        packageList.innerHTML = ''; distributionList.innerHTML = '';
+        data.packages.forEach(addPackageRow); data.distributions.forEach(addDistributionRow);
         if (!data.packages.length) addPackageRow();
         if (!data.distributions.length) addDistributionRow();
       }
 
       async function importExcel() {
-        const fileInput = document.getElementById("excel-file");
-        const file = fileInput.files[0];
-        if (!file) {
-          setGlobalMsg("Choose an Excel file first.", true);
-          return;
-        }
+        const file = document.getElementById('excel-file').files[0];
+        if (!file) { setGlobalMsg('Choose an Excel file first.', true); return; }
         const buf = await file.arrayBuffer();
         const wb = XLSX.read(buf);
-
-        const packages = wb.Sheets.Packages ? XLSX.utils.sheet_to_json(wb.Sheets.Packages, { defval: "" }) : [];
-        const distributions = wb.Sheets.Distributions ? XLSX.utils.sheet_to_json(wb.Sheets.Distributions, { defval: "" }) : [];
-        const users = wb.Sheets.DistributionUsers ? XLSX.utils.sheet_to_json(wb.Sheets.DistributionUsers, { defval: "" }) : [];
-
+        const packages = wb.Sheets.Packages ? XLSX.utils.sheet_to_json(wb.Sheets.Packages, { defval: '' }) : [];
+        const distributions = wb.Sheets.Distributions ? XLSX.utils.sheet_to_json(wb.Sheets.Distributions, { defval: '' }) : [];
+        const users = wb.Sheets.DistributionUsers ? XLSX.utils.sheet_to_json(wb.Sheets.DistributionUsers, { defval: '' }) : [];
         const distributionsWithUsers = distributions.map((d) => ({
-          ...d,
-          users: users.filter((u) => String(u.distributionName) === String(d.distributionName)).map((u) => ({
-            user: u.user,
-            alternateEmail: u.alternateEmail,
-            enabled: String(u.enabled).toLowerCase() !== "false"
+          distributionName: d.distributionName || d.DistributionName || '',
+          isPublic: (d.isPublic || d.IsPublic || 'enabled').toLowerCase() === 'disabled' ? 'disabled' : 'enabled',
+          users: users.filter((u) => String(u.distributionName || u.DistributionName || '') === String(d.distributionName || d.DistributionName || '')).map((u) => ({
+            user: u.user || u.User || '',
+            alternateEmail: u.alternateEmail || u.AlternateEmail || '',
+            enabled: String(u.enabled || u.Enabled || 'true').toLowerCase() !== 'false'
           }))
         }));
-
-        const resp = await fetch("/api/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ packages, distributions: distributionsWithUsers })
-        });
-
-        if (!resp.ok) {
-          const err = await resp.json();
-          setGlobalMsg(err.error || "Import failed", true);
-          return;
-        }
+        const mappedPackages = packages.map((p) => ({
+          packageName: p.packageName || p.PackageName || '',
+          distributionGroup: p.distributionGroup || p.DistributionGroup || '',
+          deliveryType: p.deliveryType || p.DeliveryType || 'Mail (One email)',
+          emailTitle: p.emailTitle || p.EmailTitle || 'Default',
+          emailMessage: p.emailMessage || p.EmailMessage || 'Default',
+          filePath: p.filePath || p.FilePath || '',
+          outputFilename: p.outputFilename || p.OutputFilename || '',
+          accessGroup: p.accessGroup || p.AccessGroup || '',
+          packageEnabled: String(p.packageEnabled || p.PackageEnabled || 'true').toLowerCase() !== 'false',
+          location: p.location || p.Location || ''
+        }));
+        const resp = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ packages: mappedPackages, distributions: distributionsWithUsers }) });
+        if (!resp.ok) { const err = await resp.json(); setGlobalMsg(err.error || 'Import failed', true); return; }
+        setGlobalMsg('Excel imported and data refreshed from backend.');
         await loadFromBackend();
-        setGlobalMsg("Excel data imported.");
       }
 
-      async function exportAll() {
-        const resp = await fetch("/api/export");
-        const db = await resp.json();
-        const wb = XLSX.utils.book_new();
+      async function exportAll() { window.location.href = '/api/export?format=csv'; }
 
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(db.packages), "Packages");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(db.distributions.map(({ users, ...d }) => d)), "Distributions");
-
-        const users = db.distributions.flatMap((d) => d.users.map((u) => ({ distributionName: d.distributionName, ...u })));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(users), "DistributionUsers");
-
-        XLSX.writeFile(wb, "parcel-service-export.xlsx");
-        setGlobalMsg("Export complete.");
-      }
-
-      tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
-      document.getElementById("add-package").addEventListener("click", () => addPackageRow());
-      document.getElementById("add-distribution").addEventListener("click", () => addDistributionRow());
-      document.getElementById("import-excel").addEventListener("click", importExcel);
-      document.getElementById("export-data").addEventListener("click", exportAll);
-
+      tabs.forEach((tab) => tab.addEventListener('click', () => setTab(tab.dataset.tab)));
+      document.getElementById('add-package').addEventListener('click', () => addPackageRow());
+      document.getElementById('add-distribution').addEventListener('click', () => addDistributionRow());
+      document.getElementById('import-excel').addEventListener('click', importExcel);
+      document.getElementById('export-data').addEventListener('click', exportAll);
       loadFromBackend();
     </script>
   </body>
