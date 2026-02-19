@@ -135,12 +135,6 @@
         color: var(--primary-strong);
       }
 
-      .button.danger {
-        border: 1px solid #f0b6b1;
-        background: #fff4f3;
-        color: #b42318;
-      }
-
       .list {
         display: grid;
         gap: 1rem;
@@ -236,31 +230,6 @@
         color: #176d31;
         font-weight: 700;
       }
-
-      .bulk-upload {
-        border: 1px dashed #b6c8ea;
-        border-radius: 10px;
-        padding: 0.8rem;
-        margin-bottom: 1rem;
-        background: #f8fbff;
-      }
-
-      .bulk-upload p {
-        margin: 0.35rem 0 0;
-        font-size: 0.8rem;
-        color: var(--muted);
-      }
-
-      .error-banner {
-        margin: 0.8rem 0 0;
-        padding: 0.55rem 0.7rem;
-        border-radius: 8px;
-        border: 1px solid #f0b6b1;
-        background: #fff3f2;
-        color: #b42318;
-        font-weight: 700;
-        font-size: 0.86rem;
-      }
     </style>
   </head>
   <body>
@@ -285,22 +254,6 @@
           <h2>Packages</h2>
           <button id="add-package" class="button primary" type="button">Add Package</button>
         </div>
-
-        <div class="bulk-upload">
-          <div class="grid two">
-            <label>
-              Upload Excel file (bulk Packages + Distributions)
-              <input id="excel-upload" type="file" accept=".xlsx,.xls" />
-            </label>
-            <button id="process-upload" class="button secondary" type="button">Process Upload</button>
-          </div>
-          <p>
-            Required sheets: <strong>Packages</strong>, <strong>Distributions</strong>, <strong>DistributionUsers</strong>.<br />
-            If any required field is blank, the app shows: "1 or more fields left Blank".
-          </p>
-          <div id="upload-error" class="error-banner" hidden>1 or more fields left Blank</div>
-        </div>
-
         <div id="package-list" class="list"></div>
       </section>
 
@@ -466,28 +419,9 @@
       const distributionTemplate = document.getElementById("distribution-template");
       const userRowTemplate = document.getElementById("distribution-user-row-template");
 
-      const excelUploadInput = document.getElementById("excel-upload");
-      const processUploadButton = document.getElementById("process-upload");
-      const uploadErrorBanner = document.getElementById("upload-error");
-
       const distributions = [];
       let packageCounter = 0;
       let distributionCounter = 0;
-
-      function showUploadError() {
-        uploadErrorBanner.hidden = false;
-      }
-
-      function hideUploadError() {
-        uploadErrorBanner.hidden = true;
-      }
-
-      function valueOrBlank(value) {
-        if (value === undefined || value === null) {
-          return "";
-        }
-        return String(value).trim();
-      }
 
       function setTab(name) {
         const packagesActive = name === "packages";
@@ -496,6 +430,33 @@
         tabs.forEach((tab) => {
           tab.setAttribute("aria-selected", String(tab.dataset.tab === name));
         });
+      }
+
+      function markSaved(button) {
+        const status = button.nextElementSibling;
+        status.hidden = false;
+        window.setTimeout(() => {
+          status.hidden = true;
+        }, 1200);
+      }
+
+      function populateDistributionSelect(select) {
+        select.innerHTML = "";
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = distributions.length ? "Select a distribution" : "No distributions yet";
+        select.appendChild(defaultOption);
+
+        distributions.forEach((name) => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          select.appendChild(option);
+        });
+      }
+
+      function refreshDistributionSelects() {
+        document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
       }
 
       function markSaved(button) {
@@ -541,53 +502,19 @@
         const saveButton = card.querySelector(".save-package");
         const distributionSelect = card.querySelector('select[name="distributionGroup"]');
 
-        const deliveryTypeInput = card.querySelector('select[name="deliveryType"]');
-        const emailTitleInput = card.querySelector('input[name="emailTitle"]');
-        const emailMessageInput = card.querySelector('textarea[name="emailMessage"]');
-        const filePathInput = card.querySelector('input[name="filePath"]');
-        const outputFilenameInput = card.querySelector('input[name="outputFilename"]');
-        const accessGroupInput = card.querySelector('input[name="accessGroup"]');
-        const packageEnabledInput = card.querySelector('input[name="packageEnabled"]');
-        const locationInput = card.querySelector('input[name="location"]');
-
-        title.textContent = `Package ${packageNumber}`;
+        title.textContent = `Package ${packageCounter}`;
         nameInput.addEventListener("input", () => {
           const value = nameInput.value.trim();
-          title.textContent = value || `Package ${packageNumber}`;
+          title.textContent = value || `Package ${packageCounter}`;
         });
 
-        nameInput.value = data.packageName || "";
-        if (data.packageName) {
-          title.textContent = data.packageName;
-        }
-
-        if (data.deliveryType) {
-          deliveryTypeInput.value = data.deliveryType;
-        }
-
-        emailTitleInput.value = data.emailTitle || "Default";
-        emailMessageInput.value = data.emailMessage || "Default";
-        filePathInput.value = data.filePath || "";
-        outputFilenameInput.value = data.outputFilename || "";
-        accessGroupInput.value = data.accessGroup || "";
-        packageEnabledInput.checked = data.packageEnabled !== false;
-        locationInput.value = data.location || "";
-
         populateDistributionSelect(distributionSelect);
-        if (data.distributionGroup && distributions.includes(data.distributionGroup)) {
-          distributionSelect.value = data.distributionGroup;
-        }
-
         saveButton.addEventListener("click", () => markSaved(saveButton));
         packageList.appendChild(fragment);
       }
 
-      function addUserRow(container, data = {}) {
+      function addUserRow(container) {
         const row = userRowTemplate.content.cloneNode(true);
-        const rowElement = row.querySelector("tr");
-        rowElement.querySelector('input[name="user"]').value = data.user || "";
-        rowElement.querySelector('input[name="alternateEmail"]').value = data.alternateEmail || "";
-        rowElement.querySelector('input[name="enabled"]').checked = data.enabled !== false;
         container.appendChild(row);
       }
 
@@ -599,7 +526,6 @@
         const card = fragment.querySelector(".item-card");
         const title = card.querySelector(".distribution-title");
         const nameInput = card.querySelector('input[name="distributionName"]');
-        const isPublicInput = card.querySelector('select[name="isPublic"]');
         const addUserButton = card.querySelector(".add-user");
         const users = card.querySelector(".users");
         const saveButton = card.querySelector(".save-distribution");
@@ -607,17 +533,8 @@
         title.textContent = `Distribution ${distributionNumber}`;
         nameInput.addEventListener("input", () => {
           const value = nameInput.value.trim();
-          title.textContent = value || `Distribution ${distributionNumber}`;
+          title.textContent = value || `Distribution ${distributionCounter}`;
         });
-
-        nameInput.value = data.distributionName || "";
-        if (data.distributionName) {
-          title.textContent = data.distributionName;
-        }
-
-        if (data.isPublic) {
-          isPublicInput.value = data.isPublic;
-        }
 
         addUserButton.addEventListener("click", () => addUserRow(users));
         saveButton.addEventListener("click", () => {
@@ -629,12 +546,7 @@
           markSaved(saveButton);
         });
 
-        if (Array.isArray(data.users) && data.users.length > 0) {
-          data.users.forEach((userData) => addUserRow(users, userData));
-        } else {
-          addUserRow(users);
-        }
-
+        addUserRow(users);
         distributionList.appendChild(fragment);
 
         if (data.distributionName && !distributions.includes(data.distributionName)) {
@@ -643,180 +555,12 @@
         }
       }
 
-      function parseBoolean(value, fallback = true) {
-        const normalized = valueOrBlank(value).toLowerCase();
-        if (!normalized) {
-          return fallback;
-        }
-
-        if (["true", "yes", "1", "enabled", "enable", "y"].includes(normalized)) {
-          return true;
-        }
-
-        if (["false", "no", "0", "disabled", "disable", "n"].includes(normalized)) {
-          return false;
-        }
-
-        return fallback;
-      }
-
-      function parseWorkbook(workbook) {
-        const packagesSheet = workbook.Sheets.Packages;
-        const distributionsSheet = workbook.Sheets.Distributions;
-        const usersSheet = workbook.Sheets.DistributionUsers;
-
-        if (!packagesSheet || !distributionsSheet || !usersSheet) {
-          showUploadError();
-          return;
-        }
-
-        const packageRows = XLSX.utils.sheet_to_json(packagesSheet, { defval: "" });
-        const distributionRows = XLSX.utils.sheet_to_json(distributionsSheet, { defval: "" });
-        const userRows = XLSX.utils.sheet_to_json(usersSheet, { defval: "" });
-
-        const validatedPackages = [];
-        const validatedDistributions = [];
-        const usersByDistribution = new Map();
-
-        for (const row of distributionRows) {
-          const distributionName = valueOrBlank(row.DistributionName);
-          const isPublic = valueOrBlank(row.IsPublic);
-
-          if (!distributionName || !isPublic) {
-            showUploadError();
-            return;
-          }
-
-          validatedDistributions.push({
-            distributionName,
-            isPublic: parseBoolean(isPublic) ? "enabled" : "disabled",
-            users: [],
-          });
-
-          usersByDistribution.set(distributionName, []);
-        }
-
-        for (const row of userRows) {
-          const distributionName = valueOrBlank(row.DistributionName);
-          const user = valueOrBlank(row.User);
-          const alternateEmail = valueOrBlank(row.AlternateEmail);
-          const enabled = valueOrBlank(row.Enabled);
-
-          if (!distributionName || !user || !alternateEmail || !enabled) {
-            showUploadError();
-            return;
-          }
-
-          if (!usersByDistribution.has(distributionName)) {
-            showUploadError();
-            return;
-          }
-
-          usersByDistribution.get(distributionName).push({
-            user,
-            alternateEmail,
-            enabled: parseBoolean(enabled),
-          });
-        }
-
-        for (const distribution of validatedDistributions) {
-          distribution.users = usersByDistribution.get(distribution.distributionName) || [];
-          if (distribution.users.length === 0) {
-            showUploadError();
-            return;
-          }
-        }
-
-        for (const row of packageRows) {
-          const packageName = valueOrBlank(row.PackageName);
-          const distributionGroup = valueOrBlank(row.DistributionGroup);
-          const deliveryType = valueOrBlank(row.DeliveryType);
-          const emailTitle = valueOrBlank(row.EmailTitle);
-          const emailMessage = valueOrBlank(row.EmailMessage);
-          const filePath = valueOrBlank(row.FilePath);
-          const outputFilename = valueOrBlank(row.OutputFilename);
-          const accessGroup = valueOrBlank(row.AccessGroup);
-          const packageEnabled = valueOrBlank(row.PackageEnabled);
-          const location = valueOrBlank(row.Location);
-
-          if (
-            !packageName ||
-            !distributionGroup ||
-            !deliveryType ||
-            !emailTitle ||
-            !emailMessage ||
-            !filePath ||
-            !outputFilename ||
-            !accessGroup ||
-            !packageEnabled ||
-            !location
-          ) {
-            showUploadError();
-            return;
-          }
-
-          if (!["Mail (One email)", "Mail Individual Emails"].includes(deliveryType)) {
-            showUploadError();
-            return;
-          }
-
-          validatedPackages.push({
-            packageName,
-            distributionGroup,
-            deliveryType,
-            emailTitle,
-            emailMessage,
-            filePath,
-            outputFilename,
-            accessGroup,
-            packageEnabled: parseBoolean(packageEnabled),
-            location,
-          });
-        }
-
-        hideUploadError();
-
-        distributionList.innerHTML = "";
-        packageList.innerHTML = "";
-        distributions.length = 0;
-        packageCounter = 0;
-        distributionCounter = 0;
-
-        validatedDistributions.forEach((distribution) => addDistributionRow(distribution));
-        validatedPackages.forEach((pkg) => addPackageRow(pkg));
-      }
-
-      async function processUpload() {
-        hideUploadError();
-
-        if (!excelUploadInput.files || excelUploadInput.files.length === 0) {
-          showUploadError();
-          return;
-        }
-
-        if (typeof XLSX === "undefined") {
-          showUploadError();
-          return;
-        }
-
-        const file = excelUploadInput.files[0];
-
-        try {
-          const data = await file.arrayBuffer();
-          const workbook = XLSX.read(data, { type: "array" });
-          parseWorkbook(workbook);
-        } catch {
-          showUploadError();
-        }
-      }
-
       tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
-      document.getElementById("add-package").addEventListener("click", () => addPackageRow());
-      document.getElementById("add-distribution").addEventListener("click", () => addDistributionRow());
-      processUploadButton.addEventListener("click", processUpload);
+      document.getElementById("add-package").addEventListener("click", addPackage);
+      document.getElementById("add-distribution").addEventListener("click", addDistribution);
 
-      addPackageRow();
-      addDistributionRow();
+      addPackage();
+      addDistribution();
     </script>
   </body>
 </html>
