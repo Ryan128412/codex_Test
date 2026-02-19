@@ -440,49 +440,27 @@
         }, 1200);
       }
 
-      function populateDistributionSelect(select) {
-        select.innerHTML = "";
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.textContent = distributions.length ? "Select a distribution" : "No distributions yet";
-        select.appendChild(defaultOption);
-
-        distributions.forEach((name) => {
-          const option = document.createElement("option");
-          option.value = name;
-          option.textContent = name;
-          select.appendChild(option);
-        });
-      }
-
-      function refreshDistributionSelects() {
-        document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
-      }
-
-      function markSaved(button) {
-        const status = button.nextElementSibling;
-        status.hidden = false;
-        window.setTimeout(() => {
-          status.hidden = true;
-        }, 1200);
+      function getSavedDistributions() {
+        return distributions.filter((distribution) => distribution.saved && distribution.name);
       }
 
       function populateDistributionSelect(select) {
         const selectedValue = select.value;
         select.innerHTML = "";
+        const savedDistributions = getSavedDistributions();
         const defaultOption = document.createElement("option");
         defaultOption.value = "";
-        defaultOption.textContent = distributions.length ? "Select a distribution" : "No distributions yet";
+        defaultOption.textContent = savedDistributions.length ? "Select a distribution" : "No distributions yet";
         select.appendChild(defaultOption);
 
-        distributions.forEach((name) => {
+        savedDistributions.forEach((distribution) => {
           const option = document.createElement("option");
-          option.value = name;
-          option.textContent = name;
+          option.value = distribution.id;
+          option.textContent = distribution.name;
           select.appendChild(option);
         });
 
-        if (selectedValue && distributions.includes(selectedValue)) {
+        if (selectedValue && savedDistributions.some((distribution) => distribution.id === selectedValue)) {
           select.value = selectedValue;
         }
       }
@@ -509,6 +487,9 @@
         });
 
         populateDistributionSelect(distributionSelect);
+        if (data.distributionGroup) {
+          distributionSelect.value = data.distributionGroup;
+        }
         saveButton.addEventListener("click", () => markSaved(saveButton));
         packageList.appendChild(fragment);
       }
@@ -521,6 +502,12 @@
       function addDistributionRow(data = {}) {
         distributionCounter += 1;
         const distributionNumber = distributionCounter;
+        const distributionRecord = {
+          id: data.id || `distribution-${distributionNumber}`,
+          name: data.distributionName?.trim() || "",
+          saved: Boolean(data.distributionName),
+        };
+        distributions.push(distributionRecord);
 
         const fragment = distributionTemplate.content.cloneNode(true);
         const card = fragment.querySelector(".item-card");
@@ -531,16 +518,24 @@
         const saveButton = card.querySelector(".save-distribution");
 
         title.textContent = `Distribution ${distributionNumber}`;
+        nameInput.value = distributionRecord.name;
+        if (distributionRecord.name) {
+          title.textContent = distributionRecord.name;
+        }
         nameInput.addEventListener("input", () => {
           const value = nameInput.value.trim();
-          title.textContent = value || `Distribution ${distributionCounter}`;
+          distributionRecord.name = value;
+          title.textContent = value || `Distribution ${distributionNumber}`;
+          if (distributionRecord.saved) {
+            refreshDistributionSelects();
+          }
         });
 
         addUserButton.addEventListener("click", () => addUserRow(users));
         saveButton.addEventListener("click", () => {
-          const name = nameInput.value.trim();
-          if (name && !distributions.includes(name)) {
-            distributions.push(name);
+          distributionRecord.name = nameInput.value.trim();
+          if (distributionRecord.name) {
+            distributionRecord.saved = true;
             refreshDistributionSelects();
           }
           markSaved(saveButton);
@@ -548,19 +543,14 @@
 
         addUserRow(users);
         distributionList.appendChild(fragment);
-
-        if (data.distributionName && !distributions.includes(data.distributionName)) {
-          distributions.push(data.distributionName);
-          refreshDistributionSelects();
-        }
       }
 
       tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
-      document.getElementById("add-package").addEventListener("click", addPackage);
-      document.getElementById("add-distribution").addEventListener("click", addDistribution);
+      document.getElementById("add-package").addEventListener("click", () => addPackageRow());
+      document.getElementById("add-distribution").addEventListener("click", () => addDistributionRow());
 
-      addPackage();
-      addDistribution();
+      addPackageRow();
+      addDistributionRow();
     </script>
   </body>
 </html>
