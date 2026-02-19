@@ -112,6 +112,25 @@
         gap: 0.75rem;
       }
 
+      .import-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.8rem;
+      }
+
+      .import-message {
+        margin-top: 0.55rem;
+        font-size: 0.85rem;
+        color: #9b2f1b;
+        font-weight: 600;
+      }
+
+      .import-message.success {
+        color: #176d31;
+      }
+
       .button {
         border: 0;
         border-radius: 8px;
@@ -247,6 +266,11 @@
           <button class="tab" role="tab" aria-selected="true" data-tab="packages">Packages</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="distributions">Distributions</button>
         </div>
+        <div class="import-controls">
+          <input id="import-file" type="file" accept=".xlsx,.xls,.csv" />
+          <button id="import-button" class="button secondary" type="button">Import Workbook</button>
+        </div>
+        <p id="import-message" class="import-message" role="status" aria-live="polite"></p>
       </section>
 
       <section id="packages" class="card panel">
@@ -418,6 +442,9 @@
       const packageTemplate = document.getElementById("package-template");
       const distributionTemplate = document.getElementById("distribution-template");
       const userRowTemplate = document.getElementById("distribution-user-row-template");
+      const importFileInput = document.getElementById("import-file");
+      const importButton = document.getElementById("import-button");
+      const importMessage = document.getElementById("import-message");
 
       const distributions = [];
       let packageCounter = 0;
@@ -440,31 +467,23 @@
         }, 1200);
       }
 
-      function populateDistributionSelect(select) {
-        select.innerHTML = "";
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.textContent = distributions.length ? "Select a distribution" : "No distributions yet";
-        select.appendChild(defaultOption);
-
-        distributions.forEach((name) => {
-          const option = document.createElement("option");
-          option.value = name;
-          option.textContent = name;
-          select.appendChild(option);
-        });
+      function setImportMessage(message, isError = true) {
+        importMessage.textContent = message;
+        importMessage.classList.toggle("success", !isError);
       }
 
-      function refreshDistributionSelects() {
-        document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
+      function normalizeKeys(record) {
+        return Object.entries(record || {}).reduce((normalized, [key, value]) => {
+          if (typeof key !== "string") {
+            return normalized;
+          }
+          normalized[key.trim().toLowerCase()] = value;
+          return normalized;
+        }, {});
       }
 
-      function markSaved(button) {
-        const status = button.nextElementSibling;
-        status.hidden = false;
-        window.setTimeout(() => {
-          status.hidden = true;
-        }, 1200);
+      function getValue(record, fieldName) {
+        return record[fieldName.toLowerCase()] ?? "";
       }
 
       function populateDistributionSelect(select) {
@@ -510,11 +529,34 @@
 
         populateDistributionSelect(distributionSelect);
         saveButton.addEventListener("click", () => markSaved(saveButton));
+
+        card.querySelector('input[name="packageName"]').value = data.packageName ?? "";
+        card.querySelector('select[name="deliveryType"]').value = data.deliveryType ?? "Mail (One email)";
+        card.querySelector('input[name="emailTitle"]').value = data.emailTitle ?? "Default";
+        card.querySelector('textarea[name="emailMessage"]').value = data.emailMessage ?? "Default";
+        card.querySelector('input[name="filePath"]').value = data.filePath ?? "";
+        card.querySelector('input[name="outputFilename"]').value = data.outputFilename ?? "";
+        card.querySelector('input[name="accessGroup"]').value = data.accessGroup ?? "";
+        card.querySelector('input[name="packageEnabled"]').checked =
+          typeof data.packageEnabled === "boolean"
+            ? data.packageEnabled
+            : String(data.packageEnabled ?? "").toLowerCase() !== "false";
+        card.querySelector('input[name="location"]').value = data.location ?? "";
+        if (data.distributionGroup) {
+          distributionSelect.value = data.distributionGroup;
+        }
+        title.textContent = nameInput.value.trim() || `Package ${packageNumber}`;
+
         packageList.appendChild(fragment);
       }
 
-      function addUserRow(container) {
+      function addUserRow(container, data = {}) {
         const row = userRowTemplate.content.cloneNode(true);
+        const rowElement = row.querySelector("tr");
+        rowElement.querySelector('input[name="user"]').value = data.user ?? "";
+        rowElement.querySelector('input[name="alternateEmail"]').value = data.alternateEmail ?? "";
+        rowElement.querySelector('input[name="enabled"]').checked =
+          typeof data.enabled === "boolean" ? data.enabled : String(data.enabled ?? "").toLowerCase() !== "false";
         container.appendChild(row);
       }
 
@@ -533,7 +575,7 @@
         title.textContent = `Distribution ${distributionNumber}`;
         nameInput.addEventListener("input", () => {
           const value = nameInput.value.trim();
-          title.textContent = value || `Distribution ${distributionCounter}`;
+          title.textContent = value || `Distribution ${distributionNumber}`;
         });
 
         addUserButton.addEventListener("click", () => addUserRow(users));
@@ -546,21 +588,142 @@
           markSaved(saveButton);
         });
 
-        addUserRow(users);
+        nameInput.value = data.distributionName ?? "";
+        card.querySelector('select[name="isPublic"]').value = data.isPublic ?? "enabled";
+        addUserRow(users, {
+          user: data.user,
+          alternateEmail: data.alternateEmail,
+          enabled: data.enabled,
+        });
+        title.textContent = nameInput.value.trim() || `Distribution ${distributionNumber}`;
         distributionList.appendChild(fragment);
 
         if (data.distributionName && !distributions.includes(data.distributionName)) {
           distributions.push(data.distributionName);
           refreshDistributionSelects();
         }
+
+        return distributionList.lastElementChild;
+      }
+
+      function validateRequiredColumns(headers, requiredColumns) {
+        const lowerHeaders = headers.map((header) => String(header).trim().toLowerCase());
+        return requiredColumns.filter((field) => !lowerHeaders.includes(field.toLowerCase()));
+      }
+
+      async function importWorkbook() {
+        const file = importFileInput.files?.[0];
+        if (!file) {
+          setImportMessage("Select a file to import.");
+          return;
+        }
+
+        try {
+          const buffer = await file.arrayBuffer();
+          const workbook = XLSX.read(buffer, { type: "array" });
+
+          const packageSheetName = workbook.SheetNames.find((name) => name.toLowerCase().includes("package"));
+          const distributionSheetName = workbook.SheetNames.find((name) =>
+            name.toLowerCase().includes("distribution"),
+          );
+
+          if (!packageSheetName && !distributionSheetName) {
+            setImportMessage('No sheets found for packages/distributions. Use names containing "package" or "distribution".');
+            return;
+          }
+
+          let importedPackages = 0;
+          let importedDistributions = 0;
+
+          if (packageSheetName) {
+            const sheet = workbook.Sheets[packageSheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+            const missingColumns = validateRequiredColumns(Object.keys(rows[0] || {}), ["packageName", "deliveryType"]);
+            if (rows.length && missingColumns.length) {
+              setImportMessage(
+                `Package sheet is missing required columns: ${missingColumns.join(", ")}. Expected columns like packageName, deliveryType, distributionGroup, filePath, outputFilename, accessGroup, location.`,
+              );
+              return;
+            }
+
+            rows.forEach((rawRow) => {
+              const row = normalizeKeys(rawRow);
+              const packageData = {
+                packageName: getValue(row, "packageName"),
+                distributionGroup: getValue(row, "distributionGroup"),
+                deliveryType: getValue(row, "deliveryType"),
+                emailTitle: getValue(row, "emailTitle"),
+                emailMessage: getValue(row, "emailMessage"),
+                filePath: getValue(row, "filePath"),
+                outputFilename: getValue(row, "outputFilename"),
+                accessGroup: getValue(row, "accessGroup"),
+                packageEnabled: getValue(row, "packageEnabled"),
+                location: getValue(row, "location"),
+              };
+              addPackageRow(packageData);
+              importedPackages += 1;
+            });
+          }
+
+          if (distributionSheetName) {
+            const sheet = workbook.Sheets[distributionSheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+            const missingColumns = validateRequiredColumns(Object.keys(rows[0] || {}), ["distributionName", "user"]);
+            if (rows.length && missingColumns.length) {
+              setImportMessage(
+                `Distribution sheet is missing required columns: ${missingColumns.join(
+                  ", ",
+                )}. Expected columns like distributionName, user, alternateEmail, enabled, isPublic.`,
+              );
+              return;
+            }
+
+            const cardsByDistributionName = new Map();
+            rows.forEach((rawRow) => {
+              const row = normalizeKeys(rawRow);
+              const distributionName = getValue(row, "distributionName");
+              if (!distributionName) {
+                return;
+              }
+
+              let card = cardsByDistributionName.get(distributionName);
+              if (!card) {
+                card = addDistributionRow({
+                  distributionName,
+                  isPublic: getValue(row, "isPublic") || "enabled",
+                  user: getValue(row, "user"),
+                  alternateEmail: getValue(row, "alternateEmail"),
+                  enabled: getValue(row, "enabled"),
+                });
+                cardsByDistributionName.set(distributionName, card);
+                importedDistributions += 1;
+                return;
+              }
+
+              addUserRow(card.querySelector(".users"), {
+                user: getValue(row, "user"),
+                alternateEmail: getValue(row, "alternateEmail"),
+                enabled: getValue(row, "enabled"),
+              });
+            });
+          }
+
+          setImportMessage(
+            `Import complete: ${importedPackages} package row(s), ${importedDistributions} distribution(s).`,
+            false,
+          );
+        } catch (error) {
+          setImportMessage(`Failed to import workbook: ${error.message || error}`);
+        }
       }
 
       tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
-      document.getElementById("add-package").addEventListener("click", addPackage);
-      document.getElementById("add-distribution").addEventListener("click", addDistribution);
+      importButton.addEventListener("click", importWorkbook);
+      document.getElementById("add-package").addEventListener("click", () => addPackageRow());
+      document.getElementById("add-distribution").addEventListener("click", () => addDistributionRow());
 
-      addPackage();
-      addDistribution();
+      addPackageRow();
+      addDistributionRow();
     </script>
   </body>
 </html>
