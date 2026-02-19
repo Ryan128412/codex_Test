@@ -407,6 +407,7 @@
       </tr>
     </template>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
       const tabs = document.querySelectorAll(".tab");
       const packagePanel = document.getElementById("packages");
@@ -458,8 +459,42 @@
         document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
       }
 
-      function addPackage() {
+      function markSaved(button) {
+        const status = button.nextElementSibling;
+        status.hidden = false;
+        window.setTimeout(() => {
+          status.hidden = true;
+        }, 1200);
+      }
+
+      function populateDistributionSelect(select) {
+        const selectedValue = select.value;
+        select.innerHTML = "";
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = distributions.length ? "Select a distribution" : "No distributions yet";
+        select.appendChild(defaultOption);
+
+        distributions.forEach((name) => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          select.appendChild(option);
+        });
+
+        if (selectedValue && distributions.includes(selectedValue)) {
+          select.value = selectedValue;
+        }
+      }
+
+      function refreshDistributionSelects() {
+        document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
+      }
+
+      function addPackageRow(data = {}) {
         packageCounter += 1;
+        const packageNumber = packageCounter;
+
         const fragment = packageTemplate.content.cloneNode(true);
         const card = fragment.querySelector(".item-card");
         const title = card.querySelector(".package-title");
@@ -483,8 +518,10 @@
         container.appendChild(row);
       }
 
-      function addDistribution() {
+      function addDistributionRow(data = {}) {
         distributionCounter += 1;
+        const distributionNumber = distributionCounter;
+
         const fragment = distributionTemplate.content.cloneNode(true);
         const card = fragment.querySelector(".item-card");
         const title = card.querySelector(".distribution-title");
@@ -493,7 +530,7 @@
         const users = card.querySelector(".users");
         const saveButton = card.querySelector(".save-distribution");
 
-        title.textContent = `Distribution ${distributionCounter}`;
+        title.textContent = `Distribution ${distributionNumber}`;
         nameInput.addEventListener("input", () => {
           const value = nameInput.value.trim();
           title.textContent = value || `Distribution ${distributionCounter}`;
@@ -511,6 +548,11 @@
 
         addUserRow(users);
         distributionList.appendChild(fragment);
+
+        if (data.distributionName && !distributions.includes(data.distributionName)) {
+          distributions.push(data.distributionName);
+          refreshDistributionSelects();
+        }
       }
 
       tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
