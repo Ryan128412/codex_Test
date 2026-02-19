@@ -556,11 +556,11 @@
       }
 
       tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
-      document.getElementById("add-package").addEventListener("click", addPackage);
-      document.getElementById("add-distribution").addEventListener("click", addDistribution);
+      document.getElementById("add-package").addEventListener("click", addPackageRow);
+      document.getElementById("add-distribution").addEventListener("click", addDistributionRow);
 
-      addPackage();
-      addDistribution();
+      addPackageRow();
+      addDistributionRow();
     </script>
   </body>
 </html>
