@@ -432,7 +432,7 @@
         });
       }
 
-      function markSaved(button) {
+      function showSavedStatus(button) {
         const status = button.nextElementSibling;
         status.hidden = false;
         window.setTimeout(() => {
@@ -440,35 +440,48 @@
         }, 1200);
       }
 
-      function populateDistributionSelect(select) {
-        select.innerHTML = "";
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.textContent = distributions.length ? "Select a distribution" : "No distributions yet";
-        select.appendChild(defaultOption);
-
-        distributions.forEach((name) => {
-          const option = document.createElement("option");
-          option.value = name;
-          option.textContent = name;
-          select.appendChild(option);
-        });
+      function collectPackageData(card) {
+        return {
+          id: card.dataset.id ? Number(card.dataset.id) : null,
+          packageName: card.querySelector('input[name="packageName"]').value.trim(),
+          distributionGroup: card.querySelector('select[name="distributionGroup"]').value,
+          deliveryType: card.querySelector('select[name="deliveryType"]').value,
+          emailTitle: card.querySelector('input[name="emailTitle"]').value,
+          emailMessage: card.querySelector('textarea[name="emailMessage"]').value,
+          location: card.querySelector('input[name="location"]').value,
+          contents: [
+            {
+              filePath: card.querySelector('input[name="filePath"]').value,
+              outputFilename: card.querySelector('input[name="outputFilename"]').value,
+              accessGroup: card.querySelector('input[name="accessGroup"]').value,
+              enabled: card.querySelector('input[name="packageEnabled"]').checked
+            }
+          ],
+          parameters: [
+            { name: "param_Consol", value: "USD", isStatic: true },
+            { name: "Param_Store_Entities", value: "STORE_REG", isStatic: true },
+            { name: "Param_Time", value: "|!Param_Time_Input!|", isStatic: true }
+          ]
+        };
       }
 
-      function refreshDistributionSelects() {
-        document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
+      function collectDistributionData(card) {
+        const users = [...card.querySelectorAll("tbody.users tr")].map((row) => ({
+          user: row.querySelector('input[name="user"]').value.trim(),
+          alternateEmail: row.querySelector('input[name="alternateEmail"]').value.trim(),
+          enabled: row.querySelector('input[name="enabled"]').checked
+        }));
+
+        return {
+          id: card.dataset.id ? Number(card.dataset.id) : null,
+          distributionName: card.querySelector('input[name="distributionName"]').value.trim(),
+          isPublic: card.querySelector('select[name="isPublic"]').value,
+          users
+        };
       }
 
-      function markSaved(button) {
-        const status = button.nextElementSibling;
-        status.hidden = false;
-        window.setTimeout(() => {
-          status.hidden = true;
-        }, 1200);
-      }
-
-      function populateDistributionSelect(select) {
-        const selectedValue = select.value;
+      function populateDistributionSelect(select, preferred = "") {
+        const selectedValue = preferred || select.value;
         select.innerHTML = "";
         const defaultOption = document.createElement("option");
         defaultOption.value = "";
@@ -488,7 +501,57 @@
       }
 
       function refreshDistributionSelects() {
-        document.querySelectorAll('select[name="distributionGroup"]').forEach(populateDistributionSelect);
+        document.querySelectorAll('select[name="distributionGroup"]').forEach((select) => populateDistributionSelect(select));
+      }
+
+      function addUserRow(container, data = {}) {
+        const row = userRowTemplate.content.cloneNode(true);
+        const tr = row.querySelector("tr");
+        tr.querySelector('input[name="user"]').value = data.user || "";
+        tr.querySelector('input[name="alternateEmail"]').value = data.alternateEmail || "";
+        tr.querySelector('input[name="enabled"]').checked = data.enabled !== false;
+        container.appendChild(row);
+      }
+
+      async function savePackage(card, button) {
+        const payload = collectPackageData(card);
+        const hasId = Boolean(payload.id);
+        const url = hasId ? `/api/packages/${payload.id}` : "/api/packages";
+        const method = hasId ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Failed to save package");
+        const saved = await response.json();
+        card.dataset.id = saved.id;
+        showSavedStatus(button);
+      }
+
+      async function saveDistribution(card, button) {
+        const payload = collectDistributionData(card);
+        const hasId = Boolean(payload.id);
+        const url = hasId ? `/api/distributions/${payload.id}` : "/api/distributions";
+        const method = hasId ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Failed to save distribution");
+        const saved = await response.json();
+        card.dataset.id = saved.id;
+
+        if (saved.distributionName && !distributions.includes(saved.distributionName)) {
+          distributions.push(saved.distributionName);
+        }
+        refreshDistributionSelects();
+        showSavedStatus(button);
       }
 
       function addPackageRow(data = {}) {
@@ -502,20 +565,36 @@
         const saveButton = card.querySelector(".save-package");
         const distributionSelect = card.querySelector('select[name="distributionGroup"]');
 
-        title.textContent = `Package ${packageCounter}`;
+        if (data.id) card.dataset.id = data.id;
+        nameInput.value = data.packageName || "";
+        card.querySelector('select[name="deliveryType"]').value = data.deliveryType || "Mail (One email)";
+        card.querySelector('input[name="emailTitle"]').value = data.emailTitle || "Default";
+        card.querySelector('textarea[name="emailMessage"]').value = data.emailMessage || "Default";
+        card.querySelector('input[name="location"]').value = data.location || "";
+
+        if (data.contents && data.contents[0]) {
+          card.querySelector('input[name="filePath"]').value = data.contents[0].filePath || "";
+          card.querySelector('input[name="outputFilename"]').value = data.contents[0].outputFilename || "";
+          card.querySelector('input[name="accessGroup"]').value = data.contents[0].accessGroup || "";
+          card.querySelector('input[name="packageEnabled"]').checked = data.contents[0].enabled !== false;
+        }
+
+        title.textContent = nameInput.value || `Package ${packageNumber}`;
         nameInput.addEventListener("input", () => {
           const value = nameInput.value.trim();
-          title.textContent = value || `Package ${packageCounter}`;
+          title.textContent = value || `Package ${packageNumber}`;
         });
 
-        populateDistributionSelect(distributionSelect);
-        saveButton.addEventListener("click", () => markSaved(saveButton));
-        packageList.appendChild(fragment);
-      }
+        populateDistributionSelect(distributionSelect, data.distributionGroup || "");
+        saveButton.addEventListener("click", async () => {
+          try {
+            await savePackage(card, saveButton);
+          } catch (error) {
+            console.error(error);
+          }
+        });
 
-      function addUserRow(container) {
-        const row = userRowTemplate.content.cloneNode(true);
-        container.appendChild(row);
+        packageList.appendChild(fragment);
       }
 
       function addDistributionRow(data = {}) {
@@ -526,27 +605,33 @@
         const card = fragment.querySelector(".item-card");
         const title = card.querySelector(".distribution-title");
         const nameInput = card.querySelector('input[name="distributionName"]');
+        const isPublicSelect = card.querySelector('select[name="isPublic"]');
         const addUserButton = card.querySelector(".add-user");
         const users = card.querySelector(".users");
         const saveButton = card.querySelector(".save-distribution");
 
-        title.textContent = `Distribution ${distributionNumber}`;
+        if (data.id) card.dataset.id = data.id;
+        nameInput.value = data.distributionName || "";
+        isPublicSelect.value = data.isPublic || "enabled";
+
+        title.textContent = nameInput.value || `Distribution ${distributionNumber}`;
         nameInput.addEventListener("input", () => {
           const value = nameInput.value.trim();
-          title.textContent = value || `Distribution ${distributionCounter}`;
+          title.textContent = value || `Distribution ${distributionNumber}`;
         });
 
         addUserButton.addEventListener("click", () => addUserRow(users));
-        saveButton.addEventListener("click", () => {
-          const name = nameInput.value.trim();
-          if (name && !distributions.includes(name)) {
-            distributions.push(name);
-            refreshDistributionSelects();
+        saveButton.addEventListener("click", async () => {
+          try {
+            await saveDistribution(card, saveButton);
+          } catch (error) {
+            console.error(error);
           }
-          markSaved(saveButton);
         });
 
-        addUserRow(users);
+        const userRows = data.users && data.users.length ? data.users : [{}];
+        userRows.forEach((user) => addUserRow(users, user));
+
         distributionList.appendChild(fragment);
 
         if (data.distributionName && !distributions.includes(data.distributionName)) {
@@ -555,12 +640,36 @@
         }
       }
 
-      tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
-      document.getElementById("add-package").addEventListener("click", addPackage);
-      document.getElementById("add-distribution").addEventListener("click", addDistribution);
+      async function loadInitialData() {
+        const [packagesResponse, distributionsResponse] = await Promise.all([
+          fetch("/api/packages"),
+          fetch("/api/distributions")
+        ]);
 
-      addPackage();
-      addDistribution();
+        const packageData = packagesResponse.ok ? await packagesResponse.json() : [];
+        const distributionData = distributionsResponse.ok ? await distributionsResponse.json() : [];
+
+        distributionData.forEach((distribution) => addDistributionRow(distribution));
+        packageData.forEach((pkg) => addPackageRow(pkg));
+
+        if (!distributionData.length) {
+          addDistributionRow();
+        }
+        if (!packageData.length) {
+          addPackageRow();
+        }
+      }
+
+      tabs.forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
+      document.getElementById("add-package").addEventListener("click", () => addPackageRow());
+      document.getElementById("add-distribution").addEventListener("click", () => addDistributionRow());
+
+      loadInitialData().catch((error) => {
+        console.error(error);
+        addPackageRow();
+        addDistributionRow();
+      });
     </script>
+
   </body>
 </html>
